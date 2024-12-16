@@ -1,0 +1,26 @@
+name: Push Docker Image to EC2 Instance
+
+on:
+  workflow_run:
+    workflows: ["Build and Push Docker Image"]
+    types:
+      - completed
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+      - name: Pull Docker Image
+        run: docker pull ghcr.io/${{ github.repository }}:latest
+
+      - name: Delete old docker container
+        run: |
+          docker stop sample-app || true
+          docker rm sample-app || true
+
+      - name: Run latest docker image
+        run: docker run -d --name sample-app -p 3000:3000 ghcr.io/${{ github.repository }}:latest
+
+      - name: Print Logs
+        run: docker logs sample-app
